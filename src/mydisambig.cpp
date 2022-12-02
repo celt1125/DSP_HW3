@@ -29,8 +29,8 @@ int main(int argc, char **argv){
 	in.open(text_file);
 
 	/* Read language model*/
-    Vocab voc;
-    Ngram lm(voc, 2);
+	Vocab voc;
+	Ngram lm(voc, 2);
 	File lmFile(lm_file, "r");
 	lm.read(lmFile);
 	lmFile.close();
@@ -60,23 +60,24 @@ int main(int argc, char **argv){
 		/* DP */
 		for (int i=1; i<len; i++) { // word position
 			for (int j=0; j<candidates[i].size(); j++) { // candidates
-                VocabIndex cand_curr = voc.getIndex(candidates[i][j].c_str());
-                if (cand_curr == Vocab_None) {
-                    cand_curr = voc.getIndex(Vocab_Unknown);
-                }
-                double best_prob = -DBL_MAX;
-                int best_back_idx = 0;
+				VocabIndex cand_curr = voc.getIndex(candidates[i][j].c_str());
+				if (cand_curr == Vocab_None) {
+					cand_curr = voc.getIndex(Vocab_Unknown);
+				}
+				double best_prob = -DBL_MAX;
+				int best_back_idx = 0;
 				for (int k=0; k<candidates[i-1].size(); k++) { // from last word position
-					VocabIndex cand_last = voc.getIndex(candidates[i][k].c_str());
+					VocabIndex cand_last = voc.getIndex(candidates[i-1][k].c_str());
 					if (cand_last == Vocab_None) {
-					    cand_last = voc.getIndex(Vocab_Unknown);
+						cand_last = voc.getIndex(Vocab_Unknown);
 					}
 					VocabIndex context[] = {cand_last, Vocab_None};
+					// cout << "check: " << i-1 << ':' << dp.size() << ", " << j << ',' << k << ':' << dp[i-1].size() << '\n';
 					double combine_prob = dp[i-1][k] + lm.wordProb(cand_curr, context);
-                    if (combine_prob > best_prob) {
-                        best_back_idx = j;
-                        best_prob = combine_prob;
-                    }
+					if (combine_prob > best_prob) {
+						best_back_idx = k;
+						best_prob = combine_prob;
+					}
 				}
 				dp[i][j] = best_prob;
 				back_track[i][j] = best_back_idx;
@@ -84,8 +85,7 @@ int main(int argc, char **argv){
 		}
 
 		/* Back tracking */
-		cout << "back tracking: " << back_track[len - 1].size() << '\n';
-		return 0;
+		// cout << "back tracking: " << back_track[len - 1].size() << '\n';
 		vector<string> answer(len);
 		int path_idx = 0;
 		for (int i=len-1; i>=0; i--) {
